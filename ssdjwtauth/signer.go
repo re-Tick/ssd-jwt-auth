@@ -3,6 +3,7 @@ package ssdjwtauth
 import (
 	"crypto"
 	"fmt"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -24,7 +25,22 @@ func NewSigner(keyID string, pemkey []byte) (*Signer, error) {
 	return s, nil
 }
 
-func (s *Signer) SignToken(claims *jwt.MapClaims) (string, error) {
+func (s *Signer) MakeClaims(now time.Time, expiry time.Time, id string) SsdJwtClaims {
+	return SsdJwtClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    customIssuer,
+			Audience:  []string{customAudience},
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(expiry),
+			ID:        id,
+		},
+		SSDCLaims: SSDClaims{
+			Type: "undefined",
+		},
+	}
+}
+
+func (s *Signer) SignToken(claims SsdJwtClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodPS256, claims)
 	token.Header["kid"] = s.KeyID
 	return token.SignedString(s.Key)

@@ -10,6 +10,10 @@ const (
 	customClaimName = "ssd.opsmx.io"
 	customAudience  = "ssd.opsmx.io"
 	customIssuer    = "OpsMx"
+
+	SSDTokenTypeUser     = "user/v1"
+	SSDTokenTypeService  = "service-account/v1"
+	SSDTokenTypeInternal = "internal-account/v1"
 )
 
 var (

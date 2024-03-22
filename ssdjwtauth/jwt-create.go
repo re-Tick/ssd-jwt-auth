@@ -47,9 +47,9 @@ type SsdServiceToken struct {
 // Structure for Internal Token used for service-to-service communication. Any of the services
 // Can create these at any time.
 type SsdInternalToken struct {
-	Type        string   `json:"type,omitempty" yaml:"type,omitempty"`       // "internal"
-	Service     string   `json:"service,omitempty" yaml:"service,omitempty"` // Username that we will use for authentication
-	Permissions []string `json:"permissions,omitempty" yaml:"permissions,omitempty"`
+	Type           string   `json:"type,omitempty" yaml:"type,omitempty"`       // "internal"
+	Service        string   `json:"service,omitempty" yaml:"service,omitempty"` // Username that we will use for authentication
+	Authorizations []string `json:"authorizations,omitempty" yaml:"authorizations,omitempty"`
 }
 
 // JWT structure including Standard claims (renamed as registered claims)
@@ -135,11 +135,11 @@ func CreateServiceJWT(service, instanceId, orgID string) (string, error) {
 
 // Create a new Internal JWT and return a base64 encoded string
 // Returns: token-string, nil on success or non-nil error
-func CreateInternalJWT(service string, permissions []string) (string, error) {
+func CreateInternalJWT(service string, authorizations []string) (string, error) {
 	sut := &SsdInternalToken{}
 	sut.Type = SSDTokenTypeInternal
 	sut.Service = service
-	sut.Permissions = permissions
+	sut.Authorizations = authorizations
 	claims := getBaseClaims(internalTokenTimeout)
 	claims["ssd.opsmx.io"] = sut
 	return getSignedTokenStr(&claims)

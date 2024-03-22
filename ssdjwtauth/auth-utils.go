@@ -60,7 +60,7 @@ func GetServiceTokenInfo(tokenStr string) (serviceName, instanceId, orgId string
 // Given a token, knowning it is a InternalToken, call this method to get the details
 // If we don't know the token type, best is call DecodeToken, tok.GetTokenType() and call the
 // appropriate "*InfoFromSSDToken" method
-func GetInternalTokenInfo(tokenStr string) (serviceName string, permissions []string, err error) {
+func GetInternalTokenInfo(tokenStr string) (serviceName string, authorizations []string, err error) {
 	tok, err := DecodeToken(tokenStr)
 	if err != nil {
 		return "", nil, err
@@ -71,7 +71,7 @@ func GetInternalTokenInfo(tokenStr string) (serviceName string, permissions []st
 			return "", nil, fmt.Errorf("token is not a Internal Token: %s", tokenStr)
 		}
 	}
-	return sut.Service, sut.Permissions, nil
+	return sut.Service, sut.Authorizations, nil
 }
 
 // Given a token, call DecodeToken, call GetTokenType() and call this method if it is of type User
@@ -101,14 +101,14 @@ func GetServiceInfoFromSSDToken(tok SSDToken) (serviceName, instanceId, orgId st
 
 // Given a token, call DecodeToken, call GetTokenType() and call this method if it is of type Internal
 // To get the details
-func GetInternalInfoFromSSDToken(tok SSDToken) (serviceName string, permissions []string, err error) {
+func GetInternalInfoFromSSDToken(tok SSDToken) (serviceName string, authorizations []string, err error) {
 	sut, ok := tok.(*SsdInternalToken)
 	if !ok {
 		if !ok {
 			return "", nil, fmt.Errorf("token is not a Internal Token")
 		}
 	}
-	return sut.Service, sut.Permissions, nil
+	return sut.Service, sut.Authorizations, nil
 }
 
 // Given ANY tokenStr, decode it and return "SSDToken" interface that allows us to get the "type"

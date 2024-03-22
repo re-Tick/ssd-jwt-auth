@@ -95,7 +95,7 @@ func create3TypeOfTokens() {
 	}
 
 	// Create tokens of each type - Internal
-	iTokenStr, err = ssdjwtauth.CreateInternalJWT("ssd-opa", true)
+	iTokenStr, err = ssdjwtauth.CreateInternalJWT("ssd-opa", []string{"perm1", "perm2"})
 	if err != nil {
 		log.Printf("Internal Token Creation Error:%v", err)
 	} else {

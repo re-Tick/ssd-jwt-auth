@@ -1,9 +1,8 @@
-// Utilities for JWT functions
 package ssdjwtauth
 
 import (
+	"crypto"
 	"fmt"
-	"log"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -116,7 +115,6 @@ func GetInternalInfoFromSSDToken(tok SSDToken) (serviceName string, authorizatio
 func DecodeToken(tokenStr string) (SSDToken, error) {
 	m, err := GetSsdTokenFromClaims(tokenStr)
 	if err != nil {
-		log.Printf("This SHOULD NOT HAPPEN: Error processing user token:%v", err)
 		return nil, err
 	}
 	tokenType, ok := (*m)["type"].(string)
@@ -125,28 +123,22 @@ func DecodeToken(tokenStr string) (SSDToken, error) {
 	}
 	switch tokenType {
 	case SSDTokenTypeUser:
-		sut, err := GetSsdUserToken(m)
-		log.Printf("Valid User Token:%+v:Error=%v", sut, err)
-		return sut, nil
+		return GetSsdUserToken(m)
 	case SSDTokenTypeService:
-		sut, err := GetSsdServiceToken(m)
-		log.Printf("Valid Service Token:%+v:Error=%v", sut, err)
-		return sut, nil
+		return GetSsdServiceToken(m)
 	case SSDTokenTypeInternal:
-		sut, err := GetSsdInternalToken(m)
-		log.Printf("Valid User Token:%+v:Error=%v", sut, err)
-		return sut, nil
+		return GetSsdInternalToken(m)
 	default:
 		return nil, fmt.Errorf("unknown token type:%s", tokenType)
 	}
 }
 
 // Create a signed Token and return the token
-func getSignedTokenStr(claims *jwt.MapClaims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+func getSignedTokenStr(claims *jwt.MapClaims, signer crypto.PrivateKey) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodPS256, claims)
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte(hmacSecret))
+	tokenString, err := token.SignedString(signer)
 	if err != nil {
 		return "", err
 	}

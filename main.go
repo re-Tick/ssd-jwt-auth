@@ -25,7 +25,7 @@ var wrongIssuerTokenStr string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiO
 func main() { // TODO: change to a demo/test method
 	// Initialize: userID, adminGroups, UI session expiry, serviceAccount expiry, internal Token expiry time
 	// TODO: Replace HMAC with cert+key
-	ssdjwtauth.InitJWTSecret("myHmacSecret", []string{"admin", "bigboss"}, 3600, 3600*24*30, 30)
+	ssdjwtauth.InitJWTSecret([]string{"admin", "bigboss"}, 3600, 3600*24*30, 30)
 	create3TypeOfTokens()
 	testUserInfoFromSSDToken(uTokenStr)
 	testServiceInfoFromSSDToken(sTokenStr)

@@ -2,7 +2,6 @@ package ssdjwtauth
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	// "ssdgate/config"
 )
@@ -13,7 +12,6 @@ import (
 // TODO: Add a separate logging and prometheus metrics Middleware
 func JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Handling JWT req:%s\n", r.URL.String())
 		tokenStr := GetTokenStrFromHeader(r)
 		_, err := GetSsdTokenFromClaims(tokenStr)
 		if err != nil {

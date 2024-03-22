@@ -4,7 +4,6 @@
 package ssdjwtauth
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -13,17 +12,11 @@ import (
 )
 
 var (
-	hmacSecret           string = "test"
 	adminGroups          []string
 	SSDTokenTypeUser     string = "user/v1"
 	SSDTokenTypeService  string = "service-account/v1"
 	SSDTokenTypeInternal string = "internal-account/v1"
 
-	skewTimeout          time.Duration
-	userTokenTimeout30   = time.Hour * 24 * 30
-	userTokenTimeout60   = time.Hour * 24 * 60
-	userTokenTimeout90   = time.Hour * 24 * 90
-	userTokenTimeout365  = time.Hour * 24 * 365
 	serviceTokenTimeout  time.Duration
 	internalTokenTimeout time.Duration
 	sessionTimeout       time.Duration
@@ -94,57 +87,45 @@ func (t SsdInternalToken) IsAdminToken() bool {
 // lifeTime legitimate values are: 30, 60, 90 and 365 days. 0 = Session Token, based on session Timeout value
 // Returns: token-string, nil on success or non-nil error
 func CreateUserJWT(uid string, groups []string, lifeTime uint) (string, error) {
-	sut := &SsdUserToken{}
-	sut.Uid = uid
-	sut.Groups = groups
-	sut.OrgID = "NoAPIAvailableYET"         // Need to call an API to get an Org of a USER??
-	sut.IsAdmin = IsUserAnAdmin(sut.Groups) // Set the IsAdmin flag
-	sut.Type = SSDTokenTypeUser
-	// claims := getLoginClaims(sut)
-	tmpDuration := sessionTimeout
-	switch lifeTime {
-	case 30:
-		tmpDuration = userTokenTimeout30
-	case 60:
-		tmpDuration = userTokenTimeout60
-	case 90:
-		tmpDuration = userTokenTimeout90
-	case 365:
-		tmpDuration = userTokenTimeout365
-	case 0: // Default is session Timeout
-	default:
-		return "", fmt.Errorf("invalid expiration option specified(0,30,60,90,365):%v", lifeTime)
+	sut := &SsdUserToken{
+		Type:    SSDTokenTypeUser,
+		Uid:     uid,
+		Groups:  groups,
+		OrgID:   "notset",
+		IsAdmin: IsUserAnAdmin(groups),
 	}
-	claims := getBaseClaims(tmpDuration)
-	claims["ssd.opsmx.io"] = sut
+	// claims := getLoginClaims(sut)
+	claims := getBaseClaims(time.Duration(lifeTime) * time.Second)
+	claims[customClaimName] = sut
 	claims["sub"] = sut.Uid
-	return getSignedTokenStr(&claims)
+	return getSignedTokenStr(&claims, SigningKey)
 }
 
 // Create a new Service JWT and return a base64 encoded string
 // Returns: token-string, nil on success or non-nil error
 func CreateServiceJWT(service, instanceId, orgID string) (string, error) {
-	sut := &SsdServiceToken{}
-	sut.Type = SSDTokenTypeService
-	sut.Service = service
-	sut.InstanceID = instanceId
-	sut.OrgID = orgID
-	sut.Type = SSDTokenTypeService
+	sut := &SsdServiceToken{
+		Type:       SSDTokenTypeService,
+		Service:    service,
+		InstanceID: instanceId,
+		OrgID:      orgID,
+	}
 	claims := getBaseClaims(serviceTokenTimeout)
-	claims["ssd.opsmx.io"] = sut
-	return getSignedTokenStr(&claims)
+	claims[customClaimName] = sut
+	return getSignedTokenStr(&claims, SigningKey)
 }
 
 // Create a new Internal JWT and return a base64 encoded string
 // Returns: token-string, nil on success or non-nil error
 func CreateInternalJWT(service string, authorizations []string) (string, error) {
-	sut := &SsdInternalToken{}
-	sut.Type = SSDTokenTypeInternal
-	sut.Service = service
-	sut.Authorizations = authorizations
+	sut := &SsdInternalToken{
+		Type:           SSDTokenTypeInternal,
+		Service:        service,
+		Authorizations: authorizations,
+	}
 	claims := getBaseClaims(internalTokenTimeout)
-	claims["ssd.opsmx.io"] = sut
-	return getSignedTokenStr(&claims)
+	claims[customClaimName] = sut
+	return getSignedTokenStr(&claims, SigningKey)
 }
 
 // Method to fill in all the defaults and set the expiry time
@@ -152,9 +133,9 @@ func CreateInternalJWT(service string, authorizations []string) (string, error) 
 func getBaseClaims(duration time.Duration) jwt.MapClaims {
 	log.Printf("Duration: %v", duration)
 	claims := jwt.MapClaims{
-		"iss": "OpsMx",
-		"aud": "ssd.opsmx.io",
-		"nbf": time.Now().Add(skewTimeout).Unix(),
+		"iss": customIssuer,
+		"aud": customAudience,
+		"nbf": time.Now().Unix(),
 		"exp": time.Now().Add(duration).Unix(), // JWT expiration time
 		"jti": uuid.New(),
 	}
@@ -163,84 +144,11 @@ func getBaseClaims(duration time.Duration) jwt.MapClaims {
 
 // Initialize JWT creation. This might include certs/secrets, admin groups and more
 // Must be called before using any other methods, typically during start-up
-func InitJWTSecret(secret string, admingrps []string, sessionTmout, serviceTokenTmout, internalTokenTmout uint) {
-	hmacSecret = secret
+func InitJWTSecret(admingrps []string, sessionTmout, serviceTokenTmout, internalTokenTmout uint) {
 	adminGroups = admingrps
-	skewTimeout = -time.Duration(300) * time.Second            // Fixed time for handling clock skews, negative
 	sessionTimeout = time.Duration(sessionTmout) * time.Second // Session time out in mill sec
 	serviceTokenTimeout = time.Duration(serviceTokenTmout) * time.Second
 	internalTokenTimeout = time.Duration(internalTokenTmout) * time.Second
 	// userTokenTimeout = time.Duration(userTokenTmout) * time.Second
 	// TODO: Go-routine to clean-up the revoked list once the token has expired
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-////////// NO CODE BELOW THIS LINE, CUT-PASTE STUFF ONLY //////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-// token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-// // Sign and get the complete encoded token as a string using the secret
-// tokenString, err := token.SignedString([]byte(hmacSecret))
-// if err != nil {
-// 	return false, "", err
-// }
-// return true, tokenString, nil
-// sut := SsdUserToken{
-// 	Type:    SSDTokenTypeUser,
-// 	Uid:     user.Uid,
-// 	OrgID:   "NoAPIAvailableYET",
-// 	Groups:  []string{},
-// 	IsAdmin: false,
-// 	JTI:     "NotImplementedYet",
-// 	ExpTime: time.Time{},
-// }
-// sut := SsdUserToken{"user/v1", user.Uid, "NoAPIAvailableYET", user.Groups, false}
-// Not using MAPs, that might be slower than a direct search as we don't expect a long list of Admin-groups
-// This might be a challenge where one of our customers has 1500+ groups per user
-// found := false
-// for _, element := range sut.Groups { // With 3 admin groups, 1500 user groups, we have 4500 iterations!!
-// 	for _, usergrp := range adminGroups {
-// 		if element == usergrp {
-// 			found = true
-// 			break
-// 		}
-// 	}
-// }
-
-// claims := jwt.MapClaims{
-// 	"sub": sut.Uid,
-// 	"aud": "ssd.opsmx.io",
-// 	"nbf": time.Now().Add(-time.Second * 300).Unix(),
-// 	// "nbf":          time.Now().Unix(),
-// 	"exp":          time.Now().Add(time.Second * sessionTimeout).Unix(), // JWT expiration time
-// 	"jti":          uuid.New(),
-// 	"ssd.opsmx.io": sut,
-// }
-// return getSignedTokenStr(&claims)
-// claims := jwt.MapClaims{
-// 	"sub": sut.Uid,
-// 	"aud": "ssd.opsmx.io",
-// 	"nbf": time.Now().Add(-time.Second * 300).Unix(),
-// 	// "nbf":          time.Now().Unix(),
-// 	"exp":          time.Now().Add(time.Second * sessionTimeout).Unix(), // JWT expiration time
-// 	"jti":          uuid.New(),
-// 	"ssd.opsmx.io": sut,
-// }
-
-// Structure for User Token Claim, that is created at login or via UI after logging in
-// OR can be created with an existing Token before it expires
-// type SsdJwtUser struct {
-// 	Username string
-// 	Groups   []string
-// 	IsAdmin  bool
-// 	JTI      string    // Token identifier
-// 	ExpTime  time.Time // Expiry time, needed for clean up
-// }
-
-// func getLoginClaims(sut *SsdUserToken) *jwt.MapClaims {
-// 	claims := getBaseClaims(sessionTimeout)
-// 	claims["ssd.opsmx.io"] = sut
-// 	claims["sub"] = sut.Uid
-// 	return &claims
-// }

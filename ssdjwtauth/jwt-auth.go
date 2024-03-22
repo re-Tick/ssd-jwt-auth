@@ -22,7 +22,6 @@ func GetSsdUserToken(m *map[string]interface{}) (*SsdUserToken, error) {
 	sut := SsdUserToken{}
 	err := mapstructure.Decode(m, &sut)
 	if err != nil {
-		log.Printf("Error Parsing UserToken:%v", err)
 		return nil, err
 	}
 	return &sut, nil
@@ -37,7 +36,6 @@ func GetSsdServiceToken(m *map[string]interface{}) (*SsdServiceToken, error) {
 	sut := SsdServiceToken{}
 	err := mapstructure.Decode(m, &sut)
 	if err != nil {
-		log.Printf("Error Parsing UserToken:%v", err)
 		return nil, err
 	}
 	return &sut, nil
@@ -78,20 +76,12 @@ func GetTokenStrFromHeader(r *http.Request) string {
 // Get Uid from Incoming Request
 func GetUserFromReqHeader(r *http.Request) (string, error) {
 	tokenStr := GetTokenStrFromHeader(r)
-	token, err := jwt.ParseWithClaims(tokenStr, &SsdJwtClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok { // Validate method
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(hmacSecret), nil
-	})
-
+	token, err := jwt.ParseWithClaims(tokenStr, &SsdJwtClaims{}, keyFunc, parseOptions...)
 	if err != nil {
-		log.Printf("Message: Token is wrong or Expired")
 		return "", err
 	}
 
 	if claims, ok := token.Claims.(*SsdJwtClaims); ok && token.Valid {
-		log.Printf("Uid: %v", claims.Subject)
 		if claims.Subject != "" {
 			return claims.Subject, nil
 		}
@@ -103,50 +93,20 @@ func GetUserFromReqHeader(r *http.Request) (string, error) {
 // And return it for further processing SsdToken
 // func getSsdTokenFromClaims(tokenStr string) (*SsdToken, error) {
 func GetSsdTokenFromClaims(tokenStr string) (*map[string]interface{}, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &SsdJwtClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok { // Validate method
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		iss, err := token.Claims.GetIssuer()
-		if err != nil {
-			return nil, fmt.Errorf("issuer could not be found: %v", token.Claims)
-		}
-		if iss != "OpsMx" {
-			return nil, fmt.Errorf("issuer is invalid:%s, expecting:%s", string(iss), "OpsMx")
-		}
-		tmp, err := token.Claims.GetAudience()
-		if err != nil {
-			return nil, fmt.Errorf("audience could not be found: %v", token.Claims)
-		}
-		aud, err := tmp.MarshalJSON()
-		if err != nil {
-			return nil, fmt.Errorf("audience could not be found: %v", tmp)
-		}
-		audStr := "[\"ssd.opsmx.io\"]"
-		if string(aud) != audStr {
-			return nil, fmt.Errorf("audience is invalid: %s, expecting:%s", string(aud), audStr)
-		}
-
-		return []byte(hmacSecret), nil
-	})
+	token, err := jwt.ParseWithClaims(tokenStr, &SsdJwtClaims{}, keyFunc, parseOptions...)
 	if err != nil {
-		// log.Printf("Error ParseWithClaims:%v", err)
 		return nil, err
 	}
 	// Check if Valid
 	if !token.Valid {
-		log.Printf("Token Not valid:%v", tokenStr)
 		return nil, fmt.Errorf("JWT token is not valid")
 	}
 
 	if claims, ok := token.Claims.(*SsdJwtClaims); ok {
-		// log.Printf("Token Audience:%s", claims.Audience)
-		// log.Printf("Token Audience:%s", claims)
 		st := claims.SSDToken
 
 		tokenType, ok := st["type"].(string)
 		if !ok {
-			log.Println("Token Type could not be in the Claim")
 			return nil, fmt.Errorf("SSD token is does not appear to contain \"Type\"")
 		}
 		switch tokenType {

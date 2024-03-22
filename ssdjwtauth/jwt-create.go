@@ -12,20 +12,22 @@ import (
 	"github.com/google/uuid"
 )
 
-var hmacSecret string = "test"
-var adminGroups []string
-var SSDTokenTypeUser string = "user/v1"
-var SSDTokenTypeService string = "service-account/v1"
-var SSDTokenTypeInternal string = "internal-account/v1"
+var (
+	hmacSecret           string = "test"
+	adminGroups          []string
+	SSDTokenTypeUser     string = "user/v1"
+	SSDTokenTypeService  string = "service-account/v1"
+	SSDTokenTypeInternal string = "internal-account/v1"
 
-var skewTimeout time.Duration
-var userTokenTimeout30 time.Duration
-var userTokenTimeout60 time.Duration
-var userTokenTimeout90 time.Duration
-var userTokenTimeout365 time.Duration
-var serviceTokenTimeout time.Duration
-var internalTokenTimeout time.Duration
-var sessionTimeout time.Duration
+	skewTimeout          time.Duration
+	userTokenTimeout30   = time.Hour * 24 * 30
+	userTokenTimeout60   = time.Hour * 24 * 60
+	userTokenTimeout90   = time.Hour * 24 * 90
+	userTokenTimeout365  = time.Hour * 24 * 365
+	serviceTokenTimeout  time.Duration
+	internalTokenTimeout time.Duration
+	sessionTimeout       time.Duration
+)
 
 // Structure for User Token Claims that can be created via UI, or via API with a valid token
 type SsdUserToken struct {
@@ -169,10 +171,6 @@ func InitJWTSecret(secret string, admingrps []string, sessionTmout, serviceToken
 	serviceTokenTimeout = time.Duration(serviceTokenTmout) * time.Second
 	internalTokenTimeout = time.Duration(internalTokenTmout) * time.Second
 	// userTokenTimeout = time.Duration(userTokenTmout) * time.Second
-	userTokenTimeout30 = time.Duration(30) * time.Hour * 24
-	userTokenTimeout60 = time.Duration(60) * time.Hour * 24
-	userTokenTimeout90 = time.Duration(90) * time.Hour * 24
-	userTokenTimeout365 = time.Duration(365) * time.Hour * 24
 	// TODO: Go-routine to clean-up the revoked list once the token has expired
 }
 

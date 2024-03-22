@@ -13,8 +13,6 @@ const (
 )
 
 var (
-	signer = jwt.SigningMethodPS256
-
 	parseOptions = []jwt.ParserOption{
 		jwt.WithLeeway(5 * time.Minute),
 		jwt.WithAudience(customAudience),
@@ -22,6 +20,15 @@ var (
 		jwt.WithIssuedAt(),
 		jwt.WithIssuer(customIssuer),
 		jwt.WithValidMethods([]string{
-			signer.Name,
+			jwt.SigningMethodPS256.Name,
 		})}
 )
+
+type SsdJwtClaims struct {
+	jwt.RegisteredClaims
+	SSDCLaims SSDClaims `json:"ssd.opsmx.io"`
+}
+
+type SSDClaims struct {
+	Type string
+}

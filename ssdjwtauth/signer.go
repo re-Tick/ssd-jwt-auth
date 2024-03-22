@@ -24,7 +24,7 @@ func NewSigner(keyID string, pemkey []byte) (*Signer, error) {
 	return s, nil
 }
 
-func (s *Signer) SignJWT(claims *jwt.MapClaims) (string, error) {
+func (s *Signer) SignToken(claims *jwt.MapClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodPS256, claims)
 	token.Header["kid"] = s.KeyID
 	return token.SignedString(s.Key)

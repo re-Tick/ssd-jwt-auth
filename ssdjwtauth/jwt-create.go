@@ -48,10 +48,6 @@ type SsdInternalToken struct {
 }
 
 // JWT structure including Standard claims (renamed as registered claims)
-type SsdJwtClaims struct {
-	SSDToken map[string]interface{} `json:"ssd.opsmx.io"`
-	jwt.RegisteredClaims
-}
 
 // All token types implement this interface
 type SSDToken interface {

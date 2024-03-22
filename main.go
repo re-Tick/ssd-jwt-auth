@@ -9,7 +9,7 @@ package main
 import (
 	"log"
 
-	"github.com/ksrinimba/ssd-jwt-auth/ssdjwtauth"
+	"github.com/OpsMx/ssd-jwt-auth/ssdjwtauth"
 )
 
 // Pre-generated Token strings for testing, could expire after month or so, but are overwritten by createTokens
@@ -77,7 +77,7 @@ func create3TypeOfTokens() {
 	log.Println("use jwt.io, debugger to see the token, epochconverter.com to check the expiry")
 	// Create tokens of each type - user
 	var err error
-	uTokenStr, err = ssdjwtauth.CreateUserJWT("ksrinimba", []string{"dev", "qa"}, 365)
+	uTokenStr, err = ssdjwtauth.CreateUserJWT("OpsMx", []string{"dev", "qa"}, 365)
 	if err != nil {
 		log.Printf("User Token Creation Error:%v", err)
 	} else {

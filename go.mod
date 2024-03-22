@@ -1,4 +1,4 @@
-module github.com/ksrinimba/ssd-jwt-auth
+module github.com/OpsMx/ssd-jwt-auth
 
 go 1.21
 

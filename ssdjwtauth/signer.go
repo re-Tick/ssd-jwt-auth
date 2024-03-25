@@ -25,7 +25,7 @@ func NewSigner(keyID string, pemkey []byte) (*Signer, error) {
 	return s, nil
 }
 
-func (s *Signer) MakeClaims(now time.Time, expiry time.Time, id string) SsdJwtClaims {
+func (s *Signer) MakeClaims(now time.Time, expiry time.Time, id string, ssd SSDClaims) SsdJwtClaims {
 	return SsdJwtClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    ssdTokenIssuer,
@@ -34,9 +34,7 @@ func (s *Signer) MakeClaims(now time.Time, expiry time.Time, id string) SsdJwtCl
 			ExpiresAt: jwt.NewNumericDate(expiry),
 			ID:        id,
 		},
-		SSDCLaims: SSDClaims{
-			Type: "undefined",
-		},
+		SSDCLaims: ssd,
 	}
 }
 

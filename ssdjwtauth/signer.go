@@ -28,8 +28,8 @@ func NewSigner(keyID string, pemkey []byte) (*Signer, error) {
 func (s *Signer) MakeClaims(now time.Time, expiry time.Time, id string) SsdJwtClaims {
 	return SsdJwtClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    customIssuer,
-			Audience:  []string{customAudience},
+			Issuer:    ssdTokenIssuer,
+			Audience:  []string{ssdTokenAudience},
 			NotBefore: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(expiry),
 			ID:        id,

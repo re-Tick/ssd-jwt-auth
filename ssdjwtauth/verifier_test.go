@@ -224,3 +224,45 @@ func Test_alphanumeric(t *testing.T) {
 		})
 	}
 }
+
+func TestVerifier_SetKeys(t *testing.T) {
+	type fields struct {
+		InitialKeys map[string][]byte
+	}
+	type args struct {
+		pemkeys map[string][]byte
+	}
+	tests := []struct {
+		name       string
+		intialKeys map[string][]byte
+		newKeys    map[string][]byte
+	}{
+		{
+			"empty initial set of keys",
+			map[string][]byte{},
+			validPEMKeys,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, err := NewVerifier(tt.intialKeys, nil)
+			if err != nil {
+				t.Errorf("expected NewVerifier to not return an error for this test: %v", err)
+			}
+			if err := v.SetKeys(tt.newKeys); err != nil {
+				t.Errorf("Verifier.SetKeys() error = %v", err)
+			}
+			expectedKeyIDs := map[string]bool{}
+			for id := range tt.newKeys {
+				expectedKeyIDs[id] = true
+			}
+			actualKeyIDs := map[string]bool{}
+			for id := range v.Keys {
+				actualKeyIDs[id] = true
+			}
+			if !reflect.DeepEqual(expectedKeyIDs, actualKeyIDs) {
+				t.Errorf("expected %v to equal %v", expectedKeyIDs, actualKeyIDs)
+			}
+		})
+	}
+}

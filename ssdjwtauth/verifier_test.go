@@ -146,3 +146,38 @@ func TestVerifier_KeyFunc(t *testing.T) {
 		})
 	}
 }
+
+func Test_readKeyFiles(t *testing.T) {
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    map[string][]byte
+		wantErr bool
+	}{
+		{
+			"reads files",
+			args{"testdata/pubkeys"},
+			map[string][]byte{
+				"keyid-one": []byte("file1\n"),
+				"keyid-two": []byte("file2\n"),
+			},
+			false,
+		},
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := readKeyFiles(tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("readKeyFiles() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("readKeyFiles() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

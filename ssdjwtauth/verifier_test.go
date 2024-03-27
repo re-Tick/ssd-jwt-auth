@@ -181,3 +181,32 @@ func Test_readKeyFiles(t *testing.T) {
 		})
 	}
 }
+
+func Test_alphanumeric(t *testing.T) {
+	type args struct {
+		c byte
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"a", args{'a'}, true},
+		{"b", args{'b'}, true},
+		{"z", args{'z'}, true},
+		{"A", args{'A'}, true},
+		{"B", args{'B'}, true},
+		{"Z", args{'Z'}, true},
+		{"0", args{'0'}, true},
+		{"1", args{'1'}, true},
+		{"9", args{'9'}, true},
+		{".", args{'.'}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := alphanumeric(tt.args.c); got != tt.want {
+				t.Errorf("alphanumeric() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -76,7 +76,7 @@ func readKeyFiles(dirname string) (map[string][]byte, error) {
 
 	ret := map[string][]byte{}
 	for _, item := range items {
-		if item.Type().IsRegular() {
+		if item.Type().IsRegular() && alphanumeric(item.Name()[0]) {
 			fullpath := path.Join(dirname, item.Name())
 			b, err := os.ReadFile(fullpath)
 			if err != nil {
@@ -87,6 +87,9 @@ func readKeyFiles(dirname string) (map[string][]byte, error) {
 	}
 
 	return ret, nil
+}
+func alphanumeric(c byte) bool {
+	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
 }
 
 func (v *Verifier) reloadKeyFiles(path string) error {

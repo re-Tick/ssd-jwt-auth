@@ -17,7 +17,7 @@ var (
 		jwt.WithIssuedAt(),
 		jwt.WithIssuer(ssdTokenIssuer),
 		jwt.WithValidMethods([]string{
-			jwt.SigningMethodPS256.Name,
+			jwt.SigningMethodRS256.Name,
 		})}
 )
 

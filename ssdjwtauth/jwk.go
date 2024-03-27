@@ -25,7 +25,7 @@ func JWKFromKeymap(keys map[string]crypto.PublicKey) JWKWrapper {
 	jk := []JWK{}
 
 	for id, pubkey := range keys {
-		rsakey, ok := pubkey.(rsa.PublicKey)
+		rsakey, ok := pubkey.(*rsa.PublicKey)
 		if !ok {
 			log.Printf("Key is not a public key, ignoring")
 			continue

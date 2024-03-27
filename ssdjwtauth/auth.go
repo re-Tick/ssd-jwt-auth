@@ -16,6 +16,16 @@ const (
 	SSDTokenTypeInternal = "internal-account/v1"
 )
 
+var (
+	// signingMethod is used in many places. Chaning it here will cause all usages to automatically
+	// adapt, and will invalidate all keys generated with the older method.
+	//
+	// This uses RSA256 because dgraph doesn't (yet) support PS256.  If/when it does, this should
+	// be changed to PS256, which will require changing all tokens, or adding both methods to
+	// the verify step so older tokens will continue to work.
+	signingMethod jwt.SigningMethod = jwt.SigningMethodRS256
+)
+
 type SsdJwtClaims struct {
 	jwt.RegisteredClaims
 	SSDCLaims SSDClaims `json:"ssd.opsmx.io"`

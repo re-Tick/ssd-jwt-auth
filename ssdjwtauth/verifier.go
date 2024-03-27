@@ -3,6 +3,7 @@ package ssdjwtauth
 import (
 	"context"
 	"crypto"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -21,7 +22,7 @@ var (
 		jwt.WithIssuedAt(),
 		jwt.WithIssuer(ssdTokenIssuer),
 		jwt.WithValidMethods([]string{
-			jwt.SigningMethodRS256.Name,
+			signingMethod.Alg(),
 		})}
 )
 
@@ -66,6 +67,18 @@ func (v *Verifier) SetKeys(pemkeys map[string][]byte) error {
 	defer v.Unlock()
 	v.Keys = keys
 	return nil
+}
+
+func (v *Verifier) JWKKeys() []byte {
+	v.Lock()
+	defer v.Unlock()
+
+	jk := JWKFromKeymap(v.Keys)
+	b, err := json.Marshal(jk)
+	if err != nil {
+		return []byte{}
+	}
+	return b
 }
 
 func readKeyFiles(dirname string) (map[string][]byte, error) {

@@ -30,8 +30,8 @@ func JWKFromKeymap(keys map[string]crypto.PublicKey) JWKWrapper {
 			log.Printf("Key is not a public key, ignoring")
 			continue
 		}
-		e64 := base64.StdEncoding.EncodeToString(big.NewInt(int64(rsakey.E)).Bytes())
-		n64 := base64.StdEncoding.EncodeToString(rsakey.N.Bytes())
+		e64 := base64.RawURLEncoding.EncodeToString(big.NewInt(int64(rsakey.E)).Bytes())
+		n64 := base64.RawURLEncoding.EncodeToString(rsakey.N.Bytes())
 		j := JWK{
 			KTY: "RSA",
 			ALG: signingMethod.Alg(),

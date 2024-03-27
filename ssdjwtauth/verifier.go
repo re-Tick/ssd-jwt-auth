@@ -1,8 +1,12 @@
 package ssdjwtauth
 
 import (
+	"context"
 	"crypto"
 	"fmt"
+	"log"
+	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -62,6 +66,62 @@ func (v *Verifier) SetKeys(pemkeys map[string][]byte) error {
 	defer v.Unlock()
 	v.Keys = keys
 	return nil
+}
+
+func readKeyFiles(dirname string) (map[string][]byte, error) {
+	items, err := os.ReadDir(dirname)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := map[string][]byte{}
+	for _, item := range items {
+		if item.Type().IsRegular() {
+			fullpath := path.Join(dirname, item.Name())
+			b, err := os.ReadFile(fullpath)
+			if err != nil {
+				return nil, err
+			}
+			ret[item.Name()] = b
+		}
+	}
+
+	return ret, nil
+}
+
+func (v *Verifier) reloadKeyFiles(path string) error {
+	pemkeys, err := readKeyFiles(path)
+	if err != nil {
+		return err
+	}
+	return v.SetKeys(pemkeys)
+}
+
+func (v *Verifier) MaintainKeys(ctx context.Context, path string) error {
+	err := v.reloadKeyFiles(path)
+	if err != nil {
+		return err
+	}
+
+	// beyond here we cannot do more than log errors
+	go v.maintain(ctx, path)
+	return nil
+}
+
+func (v *Verifier) maintain(ctx context.Context, path string) {
+	t := time.NewTicker(time.Second * 60)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			err := v.reloadKeyFiles(path)
+			if err != nil {
+				log.Printf("Error reloading public keys: %v", err)
+			}
+		}
+	}
 }
 
 func parseKeys(pemkeys map[string][]byte) (map[string]crypto.PublicKey, error) {

@@ -53,7 +53,7 @@ func (s *Signer) SetSigningKey(keyID string, pemkey []byte) error {
 }
 
 func (s *Signer) SignToken(claims SsdJwtClaims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(signingMethod, claims)
 
 	s.Lock()
 	defer s.Unlock()

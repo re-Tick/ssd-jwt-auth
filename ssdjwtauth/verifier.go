@@ -198,6 +198,6 @@ func (v *Verifier) KeyFunc() jwt.Keyfunc {
 		if !found {
 			return nil, fmt.Errorf("no such key %s", kid)
 		}
-		return key, nil
+		return []crypto.PublicKey{key}, nil
 	}
 }

@@ -30,7 +30,7 @@ var (
 func (v *Verifier) MiddlewareFunc() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tokenStr := tokenFromHeaders(r)
+			tokenStr := TokenFromHeaders(r)
 			claims, err := v.VerifyToken(tokenStr)
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -59,7 +59,7 @@ func SSDTokenFromContext(ctx context.Context) (string, bool) {
 	return v, ok
 }
 
-func tokenFromHeaders(r *http.Request) string {
+func TokenFromHeaders(r *http.Request) string {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {
 		auth = r.Header.Get("X-OpsMx-Auth")
@@ -68,5 +68,8 @@ func tokenFromHeaders(r *http.Request) string {
 		return ""
 	}
 	splitToken := strings.Split(auth, "Bearer ")
+	if len(splitToken) < 2 {
+		return "Header does not contain TOKEN"
+	}
 	return splitToken[1]
 }

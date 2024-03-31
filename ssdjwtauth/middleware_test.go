@@ -74,7 +74,7 @@ func Test_tokenFromHeaders(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tokenFromHeaders(tt.args.r); got != tt.want {
+			if got := TokenFromHeaders(tt.args.r); got != tt.want {
 				t.Errorf("tokenFromHeaders() = %v, want %v", got, tt.want)
 			}
 		})

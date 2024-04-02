@@ -5,10 +5,14 @@ https://docs.google.com/document/d/1uuKitg7G0m6GzXM0BYzbsyEogZeUhthy7LSUTgnRtuQ/
 
 All services in SSD authenticate with JWTs.
 
+This package is used in 2 places. Token-Machine uses this to create JWTs. ssd services use this to validate JWTs (verifyer.go). ssg-gate creates user tokens by calling the token-machine API. Some service will eventually create service JWTs as well.
+
+It also has a middleware that can be used by all services, to transparently validate tokens. ssd-gate uses its own middleware has there are other alternate forms of auth.
+
 Communications fall in these categories:
 - External systems to services within SSD :These will typically go through the ssd-gate where they will be authenticated
 - SSD services to other SSD Services: These will use the "internal-account" type to increase the priviledges Or can use the token received to support a call
-- UI to SSD-Gate: As secure cookie is already implemented, we will continue to use it till it is changed to JWT
+- UI to SSD-Gate: As secure cookie is already implemented, we will continue to use it. JWTs with large number groups cause error in Session cookie length
 
 Token creation:
 - UI will provide options to create tokens specific to an integration
@@ -25,21 +29,4 @@ Library Functions
 - Get Organization ID
 - InstanceID (service accounts)
 - IsAdmin : true allows unconditional access
-
-TODO:
-- Middleware to let JWT header pass (user object)
-- Create user-token from UI
-- Create Service-Token from UI (would not be used, this is only for testing)
-- Sample Service implementation for testing internal-tokens, booting up (initial auth)
-- Change the token signing to cert/key from hMAc
-- Method to get common attributes: type, user, groups. instanceID, servicename, isAdmin with reasonable defaults
-- API to service the public key
-- API to request tokens - how do we "boot up the authentication?" - shared secret?
-- Pending: APIs for orgID and Instance ID
-- DONE: Methods to test tokens
-- DONE: Methods to create tokens
-
-**TODO:** ssd-gate to have API for creating service tokens request based on internal-account token
-
-**DONE:** ssd-gate has to have admin-groups definition, part of config-file
 

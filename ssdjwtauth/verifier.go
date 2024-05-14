@@ -181,8 +181,6 @@ func (v *Verifier) VerifyToken(tokenString string) (*SsdJwtClaims, error) {
 			return nil, err
 		}
 		// return nil, err
-	} else {
-		log.Println("Yay!!Parse Token WITH signature verification worked!!")
 	}
 	claims, ok := token.Claims.(*SsdJwtClaims)
 	if !ok {

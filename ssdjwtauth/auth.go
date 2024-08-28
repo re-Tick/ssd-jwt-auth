@@ -25,9 +25,10 @@ const (
 	ssdTokenAudience = "ssd.opsmx.io"
 	ssdTokenIssuer   = "OpsMx"
 
-	SSDTokenTypeUser     = "user/v1"
-	SSDTokenTypeService  = "service-account/v1"
-	SSDTokenTypeInternal = "internal-account/v1"
+	SSDTokenTypeUser        = "user/v1"
+	SSDTokenTypeService     = "service-account/v1"
+	SSDTokenTypeInternal    = "internal-account/v1"
+	SSDTokenTypeIntegration = "integration/v1"
 )
 
 var (
@@ -56,6 +57,7 @@ type SSDClaims struct {
 	UserID         string   `json:"userID,omitempty" yaml:"userID,omitempty"`
 	Service        string   `json:"service,omitempty" yaml:"service,omitempty"`
 	Instance       string   `json:"instance,omitempty" yaml:"instance,omitempty"`
+	TeamID         string   `json:"teamID,omitempty" yaml:"teamID,omitempty"`
 }
 
 type SSDUserClaims struct {
@@ -77,6 +79,12 @@ type SSDInternalClaims struct {
 	Type           string   `json:"type,omitempty" yaml:"type,omitempty"`
 	Service        string   `json:"service,omitempty" yaml:"service,omitempty"`
 	Authorizations []string `json:"authorizations,omitempty" yaml:"authorizations,omitempty"`
+}
+
+type SSDIntegrationClaims struct {
+	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
+	TeamID string `json:"teamID,omitempty" yaml:"teamID,omitempty"`
+	OrgID  string `json:"orgID,omitempty" yaml:"orgID,omitempty"`
 }
 
 func SSDUserClaimsFromClaims(s *SsdJwtClaims) (*SSDUserClaims, error) {
@@ -168,5 +176,32 @@ func SSDInternalClaimsToClaims(c *SSDInternalClaims) (SSDClaims, error) {
 		Type:           SSDTokenTypeInternal,
 		Service:        c.Service,
 		Authorizations: c.Authorizations,
+	}, nil
+}
+
+func SSDIntegrationClaimsFromClaims(s *SsdJwtClaims) (*SSDIntegrationClaims, error) {
+	if s.SSDCLaims.Type != SSDTokenTypeIntegration {
+		return nil, fmt.Errorf("cannot parse integration claims from type %s", s.SSDCLaims.Type)
+	}
+	if s.SSDCLaims.TeamID == "" {
+		return nil, fmt.Errorf("required field teamID is not set in claims")
+	}
+	if s.SSDCLaims.OrgID == "" {
+		return nil, fmt.Errorf("required field orgID is not set in claims")
+	}
+
+	ret := SSDIntegrationClaims{
+		Type:   s.SSDCLaims.Type,
+		TeamID: s.SSDCLaims.TeamID,
+		OrgID:  s.SSDCLaims.OrgID,
+	}
+	return &ret, nil
+}
+
+func SSDIntegrationClaimsToClaims(c *SSDIntegrationClaims) (SSDClaims, error) {
+	return SSDClaims{
+		Type:   SSDTokenTypeIntegration,
+		OrgID:  c.OrgID,
+		TeamID: c.TeamID,
 	}, nil
 }

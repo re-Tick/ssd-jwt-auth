@@ -98,6 +98,7 @@ func (v *Verifier) JWKKeys() []byte {
 
 func readKeyFiles(dirname string) (map[string][]byte, error) {
 	items, err := os.ReadDir(dirname)
+	log.Println("items from readKeyFiles............", items, "error............", err)
 	if err != nil {
 		return nil, err
 	}

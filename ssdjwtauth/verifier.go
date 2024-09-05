@@ -193,6 +193,7 @@ func (v *Verifier) KeyFunc() jwt.Keyfunc {
 	return func(token *jwt.Token) (interface{}, error) {
 		v.Lock()
 		defer v.Unlock()
+		log.Println("hedaer...........", token.Header)
 		kidi, found := token.Header["kid"]
 		if !found {
 			return nil, fmt.Errorf("no `kid` in header")
@@ -201,6 +202,8 @@ func (v *Verifier) KeyFunc() jwt.Keyfunc {
 		if !ok {
 			return nil, fmt.Errorf("cannot convert `kid` to string")
 		}
+		log.Println("Keys listed....", v.Keys)
+		log.Println("kid......................", kid)
 		key, found := v.Keys[kid]
 		if !found {
 			return nil, fmt.Errorf("no such key %s", kid)

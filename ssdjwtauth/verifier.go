@@ -207,6 +207,7 @@ func (v *Verifier) KeyFunc() jwt.Keyfunc {
 		log.Println("Keys listed....", v.Keys)
 		log.Println("kid......................", kid)
 		key, found := v.Keys[kid]
+		log.Println("result.....................", key, found)
 		if !found {
 			log.Println("key is not foound......", key, found)
 			return nil, fmt.Errorf("no such key %s", kid)

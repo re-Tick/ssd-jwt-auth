@@ -79,6 +79,7 @@ func (v *Verifier) SetKeys(pemkeys map[string][]byte) error {
 	}
 	v.Lock()
 	defer v.Unlock()
+	log.Println("keys.........in SetKeys ", keys)
 	v.Keys = keys
 	return nil
 }
@@ -128,6 +129,7 @@ func (v *Verifier) reloadKeyFiles(path string) error {
 }
 
 func (v *Verifier) MaintainKeys(ctx context.Context, path string) error {
+	log.Println("path...........", path)
 	err := v.reloadKeyFiles(path)
 	if err != nil {
 		return err
@@ -206,6 +208,7 @@ func (v *Verifier) KeyFunc() jwt.Keyfunc {
 		log.Println("kid......................", kid)
 		key, found := v.Keys[kid]
 		if !found {
+			log.Println("key is not foound......", key, found)
 			return nil, fmt.Errorf("no such key %s", kid)
 		}
 
